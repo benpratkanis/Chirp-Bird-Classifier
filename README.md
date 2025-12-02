@@ -1,6 +1,6 @@
 # 🐦 Chirp: Bird Call Classification
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=for-the-badge&logo=python)
+![Python](https://img.shields.io/badge/Python-3.12%2B-blue?style=for-the-badge&logo=python)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0-ee4c2c?style=for-the-badge&logo=pytorch)
 ![Librosa](https://img.shields.io/badge/Audio-Librosa-yellow?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
