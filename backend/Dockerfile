@@ -5,6 +5,7 @@ WORKDIR /app
 # Install system dependencies required for librosa (audio processing)
 RUN apt-get update && apt-get install -y \
     libsndfile1 \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache

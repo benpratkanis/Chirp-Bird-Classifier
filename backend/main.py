@@ -41,7 +41,7 @@ async def predict_endpoint(
     
     try:
         contents = await file.read()
-        results, image = predict(contents, offset=start, duration=duration)
+        results, image = predict(contents, filename=file.filename, offset=start, duration=duration)
         
         if results is None:
             raise HTTPException(status_code=500, detail="Inference failed")

@@ -8,6 +8,8 @@ import scipy.signal
 import json
 import os
 import io
+import tempfile
+import shutil
 
 # ==========================================
 # CONFIGURATION
@@ -96,18 +98,23 @@ def load_resources():
     print("✅ Resources loaded successfully.")
     return True
 
-def process_audio_to_image(audio_bytes: bytes, offset: float = 0.0, duration: float = None):
+def process_audio_to_image(audio_bytes: bytes, filename: str = None, offset: float = 0.0, duration: float = None):
     """
     Converts audio bytes to V12 spectrogram image.
     """
     try:
-        # Load audio from bytes
-        # librosa.load can take a file-like object
-        # Note: librosa.load with offset/duration on a file-like object might require the object to be seekable
-        # or it might load the whole thing and then slice. 
-        # For efficiency with bytes, we might just load it all and slice, or use soundfile directly if needed.
-        # But librosa.load supports offset/duration.
-        y, sr = librosa.load(io.BytesIO(audio_bytes), sr=CONFIG["SAMPLE_RATE"], mono=True, offset=offset, duration=duration)
+        # Save to temporary file to help librosa detect format (especially mp3)
+        suffix = os.path.splitext(filename)[1] if filename else ""
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+            tmp_file.write(audio_bytes)
+            tmp_path = tmp_file.name
+
+        try:
+            y, sr = librosa.load(tmp_path, sr=CONFIG["SAMPLE_RATE"], mono=True, offset=offset, duration=duration)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
     except Exception as e:
         print(f"❌ Error loading audio: {e}")
         return None
@@ -164,7 +171,7 @@ def process_audio_to_image(audio_bytes: bytes, offset: float = 0.0, duration: fl
 
     return Image.fromarray(merged)
 
-def predict(audio_bytes: bytes, offset: float = 0.0, duration: float = None):
+def predict(audio_bytes: bytes, filename: str = None, offset: float = 0.0, duration: float = None):
     """
     Runs inference on audio bytes.
     Returns: list of (species, probability) tuples, and base64 image string (or image object).
@@ -173,7 +180,7 @@ def predict(audio_bytes: bytes, offset: float = 0.0, duration: float = None):
         if not load_resources():
             return None, None
 
-    image = process_audio_to_image(audio_bytes, offset, duration)
+    image = process_audio_to_image(audio_bytes, filename, offset, duration)
     if image is None:
         return None, None
 
