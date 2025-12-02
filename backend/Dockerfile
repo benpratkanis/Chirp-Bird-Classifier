@@ -16,6 +16,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Copy models directory (explicitly, though COPY . . covers it if it's in the dir)
+# But good to be explicit or ensure it's there.
+# Since we moved models into backend/, COPY . . will include it.
+# No extra command needed if models is inside backend/ and we COPY . .
+# However, let's just ensure we don't exclude it in .dockerignore if it exists.
+
 # Expose the port
 EXPOSE 8000
 
