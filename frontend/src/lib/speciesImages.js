@@ -3,8 +3,14 @@ import American_Goldfinch from '@/assets/birds/American_Goldfinch.jpg';
 import American_Robin from '@/assets/birds/American_Robin.jpg';
 import Black_capped_Chickadee from '@/assets/birds/Black-capped_Chickadee.jpg';
 import Blue_Jay from '@/assets/birds/Blue_Jay.jpg';
-import Dark_eyed_Junco from '@/assets/birds/Dark-eyed_Junco.jpg';
+import Common_Grackle from '@/assets/birds/Common_Grackle.jpg';
+import Dark_eyed_Junco from '@/assets/birds/Dark-Eyed_Junco.jpg';
+import Downy_Woodpecker from '@/assets/birds/Downy_Woodpecker.jpg';
+import Eastern_Bluebird from '@/assets/birds/Eastern_Bluebird.jpg';
+import European_Starling from '@/assets/birds/European_Starling.jpg';
 import House_Finch from '@/assets/birds/House_Finch.jpg';
+import House_Sparrow from '@/assets/birds/House_Sparrow.jpg';
+import Mourning_Dove from '@/assets/birds/Mourning_Dove.jpg';
 import Northern_Cardinal from '@/assets/birds/Northern_Cardinal.jpg';
 import Northern_Flicker from '@/assets/birds/Northern_Flicker.jpg';
 import Red_bellied_Woodpecker from '@/assets/birds/Red-bellied_Woodpecker.jpg';
@@ -19,8 +25,14 @@ export const speciesImages = {
     "American_Robin": American_Robin,
     "Black-capped_Chickadee": Black_capped_Chickadee,
     "Blue_Jay": Blue_Jay,
+    "Common_Grackle": Common_Grackle,
     "Dark-eyed_Junco": Dark_eyed_Junco,
+    "Downy_Woodpecker": Downy_Woodpecker,
+    "Eastern_Bluebird": Eastern_Bluebird,
+    "European_Starling": European_Starling,
     "House_Finch": House_Finch,
+    "House_Sparrow": House_Sparrow,
+    "Mourning_Dove": Mourning_Dove,
     "Northern_Cardinal": Northern_Cardinal,
     "Northern_Flicker": Northern_Flicker,
     "Red-bellied_Woodpecker": Red_bellied_Woodpecker,
