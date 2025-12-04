@@ -118,7 +118,7 @@ function App() {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-6xl font-serif font-bold text-foreground tracking-tight"
           >
-            AvianID
+            Chirp
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
