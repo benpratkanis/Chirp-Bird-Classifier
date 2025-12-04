@@ -7,6 +7,8 @@ import { AudioRecorder } from './components/AudioRecorder';
 import { AudioEditor } from './components/AudioEditor';
 import { ClassificationResult } from './components/ClassificationResult';
 import { SpeciesCarousel } from './components/SpeciesCarousel';
+import { SpeciesInfoWindow } from './components/SpeciesInfoWindow';
+import { SpectrogramView } from './components/SpectrogramView';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toaster } from '@/components/ui/toaster';
@@ -50,7 +52,8 @@ function App() {
       formData.append('start', trimRegion.start);
       formData.append('duration', trimRegion.end - trimRegion.start);
 
-      const response = await axios.post('http://localhost:8000/predict', formData, {
+      const apiUrl = '/api';
+      const response = await axios.post(`${apiUrl}/predict`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -89,7 +92,6 @@ function App() {
 
   return (
     <div className="min-h-screen w-full relative bg-background text-foreground">
-      {/* Background Pattern Overlay */}
       <div
         className="fixed inset-0 pointer-events-none opacity-40 mix-blend-multiply z-0"
         style={{
@@ -99,7 +101,7 @@ function App() {
         }}
       />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-12 md:py-20">
+      <div className={`relative z-10 mx-auto px-4 py-12 md:py-20 transition-all duration-500 ${result ? 'max-w-7xl' : 'max-w-5xl'}`}>
         <Toaster />
 
         <div className="text-center mb-16 space-y-4">
@@ -165,7 +167,7 @@ function App() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-8"
+                className="space-y-8 max-w-4xl mx-auto"
               >
                 <div className="flex items-center justify-between">
                   <Button
@@ -227,13 +229,22 @@ function App() {
                   </Button>
                 </div>
 
-                <ClassificationResult
-                  species={result.species}
-                  confidence={result.confidence}
-                  allPredictions={allPredictions}
-                  spectrogram={spectrogram}
-                  speciesImage={speciesImages[result.species]}
-                />
+                <div className="grid xl:grid-cols-3 gap-8 items-start">
+                  <div className="xl:col-span-2">
+                    <ClassificationResult
+                      species={result.species}
+                      confidence={result.confidence}
+                      allPredictions={allPredictions}
+                      spectrogram={spectrogram}
+                      speciesImage={speciesImages[result.species]}
+                    />
+                  </div>
+                  <SpeciesInfoWindow species={result.species} />
+
+                  <div className="xl:col-span-3">
+                    <SpectrogramView spectrogram={spectrogram} />
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

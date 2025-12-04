@@ -1,16 +1,25 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 import io
 import base64
-from inference import predict, load_resources
+from inference import classifier
+import os
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load resources on startup
+    success = classifier.load_resources()
+    if not success:
+        print("Failed to load resources on startup.")
+    yield
+    # Clean up resources on shutdown if needed
+    pass
 
-origins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
+app = FastAPI(lifespan=lifespan)
+
+origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,11 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Load resources on startup
-@app.on_event("startup")
-async def startup_event():
-    load_resources()
 
 @app.get("/")
 def read_root():
@@ -36,17 +40,15 @@ async def predict_endpoint(
     duration: float = None
 ):
     if not file.content_type.startswith("audio/"):
-        # Allow video files too as per logic, but warn or check extension
         pass 
     
     try:
         contents = await file.read()
-        results, image = predict(contents, filename=file.filename, offset=start, duration=duration)
+        results, image = classifier.predict(contents, filename=file.filename, offset=start, duration=duration)
         
         if results is None:
             raise HTTPException(status_code=500, detail="Inference failed")
             
-        # Convert image to base64
         buffered = io.BytesIO()
         image.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")

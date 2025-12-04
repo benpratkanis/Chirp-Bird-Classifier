@@ -54,7 +54,7 @@ export function ClassificationResult({ species, confidence, allPredictions = [],
                             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 mb-2">
                                 Match Found
                             </Badge>
-                            <h2 className="text-4xl font-serif font-bold text-foreground tracking-tight" data-testid="text-species-name">
+                            <h2 className="text-4xl font-serif font-bold text-foreground tracking-tight break-words leading-tight" data-testid="text-species-name">
                                 {species}
                             </h2>
                         </div>
