@@ -39,7 +39,7 @@ async def predict_endpoint(
     start: float = 0.0,
     duration: float = None
 ):
-    if not file.content_type.startswith("audio/"):
+    if not (file.content_type.startswith("audio/") or file.content_type.startswith("video/")):
         pass 
     
     try:
