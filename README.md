@@ -130,20 +130,33 @@ Press `Ctrl+C` in your terminal.
 
 ### 3. Run in Production Mode
 
-Use this mode to simulate the final deployment environment. This uses `docker-compose.prod.yml` to serve the frontend via a static server (e.g., Nginx) and runs the backend with production workers (Uvicorn).
+Use this mode to simulate the final deployment environment. This uses `docker-compose.prod.yml` to serve the frontend via Nginx and runs the backend with production workers.
 
-**Start the stack (Detached mode):**
+**Architecture:**
+*   **Frontend Container (Port 3000):** Nginx serving React static files.
+*   **Backend Container (Port 8000):** FastAPI with Uvicorn.
+*   **Reverse Proxy (Host Nginx):** Your server's main Nginx should proxy requests:
+    *   `/api/*` -> `localhost:8000`
+    *   `/*` -> `localhost:3000`
+
+**Deploying on Low-Memory Servers (e.g., AWS t2.micro):**
+To prevent freezing during build, use the provided deployment script:
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d --build
+chmod +x deploy.sh
+./deploy.sh
+```
+
+**Manual Production Run:**
+```bash
+docker-compose -f docker-compose.prod.yml up --build -d
 ```
 
 **Access the application:**
-
-*   **Frontend:** `http://localhost` (Served on port 80)
+*   **Frontend:** `http://localhost:3000` (Direct container access)
+*   **Backend:** `http://localhost:8000`
 
 **Stop and remove containers:**
-
 ```bash
 docker-compose -f docker-compose.prod.yml down
 ```
