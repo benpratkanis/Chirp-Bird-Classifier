@@ -17,6 +17,9 @@ docker compose -f docker-compose.prod.yml build frontend
 echo "🔥 Starting Services..."
 docker compose -f docker-compose.prod.yml up -d
 
+echo "5. Cleaning up old images..."
+docker image prune -f
+
 echo "✅ Deployment Complete!"
 echo "Frontend running on port 3000 (Internal Nginx)"
 echo "Backend running on port 8000"
