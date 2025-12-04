@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
-import { Play, Pause, Scissors, ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
+import { Play, Pause, Scissors, ZoomIn, ZoomOut, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
@@ -15,9 +15,16 @@ export function AudioEditor({ file, onTrimChange }) {
     const [currentTime, setCurrentTime] = useState(0);
     const [zoom, setZoom] = useState(10);
     const [isReady, setIsReady] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (!containerRef.current) return;
+
+        // Reset state
+        setIsReady(false);
+        setError(null);
+        setDuration(0);
+        setCurrentTime(0);
 
         // Initialize WaveSurfer
         const ws = WaveSurfer.create({
@@ -44,13 +51,30 @@ export function AudioEditor({ file, onTrimChange }) {
         const url = URL.createObjectURL(file);
         ws.load(url);
 
+        // Pre-fetch duration for fallback
+        const media = document.createElement(file.type.startsWith('video') ? 'video' : 'audio');
+        media.preload = 'metadata';
+        media.onloadedmetadata = () => {
+            const dur = media.duration;
+            if (dur && dur > 0) {
+                // If wavesurfer hasn't set duration yet, or failed, we have this.
+                if (!isReady) {
+                    setDuration(dur);
+                }
+            }
+        };
+        media.src = url;
+
+
         // Events
         ws.on('ready', () => {
             setIsReady(true);
+            setError(null);
             const dur = ws.getDuration();
             setDuration(dur);
 
             // Create default region (middle 80%)
+            wsRegions.clearRegions();
             wsRegions.addRegion({
                 start: dur * 0.1,
                 end: dur * 0.9,
@@ -61,6 +85,21 @@ export function AudioEditor({ file, onTrimChange }) {
             });
 
             onTrimChange(dur * 0.1, dur * 0.9);
+        });
+
+        ws.on('error', (err) => {
+            console.warn("WaveSurfer error:", err);
+            // If it's a video file, it might fail to decode audio on some mobile browsers.
+            // We should still allow the user to proceed if we got the duration from the media element.
+            setError("Visual waveform unavailable for this file type.");
+
+            // Fallback: if we have duration from the media element, set up a default trim
+            if (media.duration) {
+                const dur = media.duration;
+                setDuration(dur);
+                onTrimChange(0, dur); // Default to full duration if we can't show regions
+                setIsReady(true); // Pretend we are ready so user can submit
+            }
         });
 
         ws.on('play', () => setIsPlaying(true));
@@ -82,21 +121,21 @@ export function AudioEditor({ file, onTrimChange }) {
     }, [file]);
 
     useEffect(() => {
-        if (wavesurferRef.current && isReady) {
+        if (wavesurferRef.current && isReady && !error) {
             try {
                 wavesurferRef.current.zoom(zoom);
             } catch (e) {
                 console.warn("Error setting zoom:", e);
             }
         }
-    }, [zoom, isReady]);
+    }, [zoom, isReady, error]);
 
     const togglePlay = () => {
         wavesurferRef.current?.playPause();
     };
 
     const resetRegion = () => {
-        if (regionsRef.current && duration > 0) {
+        if (regionsRef.current && duration > 0 && !error) {
             regionsRef.current.clearRegions();
             regionsRef.current.addRegion({
                 start: 0,
@@ -106,6 +145,8 @@ export function AudioEditor({ file, onTrimChange }) {
                 resize: true,
                 id: 'trim-region'
             });
+            onTrimChange(0, duration);
+        } else if (error && duration > 0) {
             onTrimChange(0, duration);
         }
     };
@@ -122,17 +163,26 @@ export function AudioEditor({ file, onTrimChange }) {
                 </div>
             </div>
 
-            <div
-                ref={containerRef}
-                className="w-full rounded-lg overflow-hidden bg-background/50 border border-border/50"
-                data-testid="waveform-container"
-            />
+            <div className="relative w-full rounded-lg overflow-hidden bg-background/50 border border-border/50 min-h-[128px]">
+                {error && (
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm bg-background/80 z-10">
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        {error} (You can still submit)
+                    </div>
+                )}
+                <div
+                    ref={containerRef}
+                    className="w-full"
+                    data-testid="waveform-container"
+                />
+            </div>
 
             <div className="flex items-center gap-4 flex-wrap">
                 <Button
                     variant="outline"
                     size="icon"
                     onClick={togglePlay}
+                    disabled={!!error}
                     className="h-10 w-10 rounded-full border-primary/20 hover:border-primary hover:bg-primary/5 hover:text-primary transition-colors"
                     data-testid="button-play-pause"
                 >
@@ -147,6 +197,7 @@ export function AudioEditor({ file, onTrimChange }) {
                         max={200}
                         step={10}
                         onValueChange={(val) => setZoom(val[0])}
+                        disabled={!!error}
                         className="w-full"
                         data-testid="slider-zoom"
                     />
