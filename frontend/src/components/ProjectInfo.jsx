@@ -131,6 +131,61 @@ export function ProjectInfo() {
 
                 <Card className="md:col-span-2">
                     <CardHeader>
+                        <CardTitle>Data Processing Pipeline</CardTitle>
+                        <CardDescription>
+                            End-to-end workflow from raw audio to trained model, executed via custom Python scripts.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="relative border-l-2 border-muted ml-4 space-y-8 py-2">
+                            <div className="relative pl-8">
+                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
+                                <h4 className="font-semibold text-sm">Step 1: Ingestion & Transformation</h4>
+                                <p className="text-xs font-mono text-muted-foreground mb-1">0_bird_audio_preprocess_highres.py</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Raw audio files are ingested, segmented into 3-second clips, and converted into high-resolution 384x384 RGB spectrograms using PCEN for noise suppression.
+                                </p>
+                            </div>
+                            <div className="relative pl-8">
+                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
+                                <h4 className="font-semibold text-sm">Step 2: Quality Control</h4>
+                                <p className="text-xs font-mono text-muted-foreground mb-1">1_spectogramClustering.py</p>
+                                <p className="text-sm text-muted-foreground">
+                                    To handle 288k+ images, we used a ResNet18 model to extract features and K-Means clustering to group similar images, allowing us to bulk-delete clusters of "junk" (silence, static, human speech).
+                                </p>
+                            </div>
+                            <div className="relative pl-8">
+                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
+                                <h4 className="font-semibold text-sm">Step 3: Class Balancing</h4>
+                                <p className="text-xs font-mono text-muted-foreground mb-1">2_datasetBalancer.py</p>
+                                <p className="text-sm text-muted-foreground">
+                                    The cleaned dataset was filtered to the top 13 species. Majority classes were downsampled and minority classes upsampled to achieve a perfect balance of 20,000 samples per class.
+                                </p>
+                            </div>
+                            <div className="relative pl-8">
+                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
+                                <h4 className="font-semibold text-sm">Step 4: Optimization</h4>
+                                <p className="text-xs font-mono text-muted-foreground mb-1">3_pngCompressor.py</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Lossless PNGs were converted to high-quality JPGs to reduce dataset size from over 100GB to 15.4GB, optimizing I/O throughput during training.
+                                </p>
+                            </div>
+                            <div className="relative pl-8">
+                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
+                                <h4 className="font-semibold text-sm">Step 5: Model Training</h4>
+                                <p className="text-xs font-mono text-muted-foreground mb-1">4_pytorch_training_highres.py</p>
+                                <p className="text-sm text-muted-foreground">
+                                    The optimized dataset was fed into an EfficientNet-B4 model. Training utilized a custom loop with Mixup and SpecAugment regularization to prevent overfitting.
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+
+
+                <Card className="md:col-span-2">
+                    <CardHeader>
                         <CardTitle>Methodology: "RGB" Audio Processing</CardTitle>
                         <CardDescription>
                             Converting raw audio into high-fidelity 3-channel images for deep learning.
@@ -140,7 +195,7 @@ export function ProjectInfo() {
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="space-y-2">
                                 <div className="h-2 w-full bg-red-500/20 rounded-full overflow-hidden">
-                                    <div className="h-full w-3/4 bg-red-500" />
+                                    <div className="h-full w-full bg-red-500" />
                                 </div>
                                 <h4 className="font-semibold">Channel 1: Energy (Red)</h4>
                                 <p className="text-xs text-muted-foreground">
@@ -149,7 +204,7 @@ export function ProjectInfo() {
                             </div>
                             <div className="space-y-2">
                                 <div className="h-2 w-full bg-green-500/20 rounded-full overflow-hidden">
-                                    <div className="h-full w-3/4 bg-green-500" />
+                                    <div className="h-full w-full bg-green-500" />
                                 </div>
                                 <h4 className="font-semibold">Channel 2: Velocity (Green)</h4>
                                 <p className="text-xs text-muted-foreground">
@@ -158,7 +213,7 @@ export function ProjectInfo() {
                             </div>
                             <div className="space-y-2">
                                 <div className="h-2 w-full bg-blue-500/20 rounded-full overflow-hidden">
-                                    <div className="h-full w-3/4 bg-blue-500" />
+                                    <div className="h-full w-full bg-blue-500" />
                                 </div>
                                 <h4 className="font-semibold">Channel 3: Acceleration (Blue)</h4>
                                 <p className="text-xs text-muted-foreground">
@@ -170,6 +225,7 @@ export function ProjectInfo() {
                 </Card>
 
                 <Card className="md:col-span-2">
+
                     <CardHeader>
                         <CardTitle>Dataset Processing</CardTitle>
                         <CardDescription>
@@ -247,54 +303,40 @@ export function ProjectInfo() {
                     </CardContent>
                 </Card>
 
+
+
+
+
                 <Card className="md:col-span-2">
                     <CardHeader>
-                        <CardTitle>Data Processing Pipeline</CardTitle>
+                        <CardTitle>Technical Implementation</CardTitle>
                         <CardDescription>
-                            End-to-end workflow from raw audio to trained model, executed via custom Python scripts.
+                            Details on the audio processing pipeline and machine learning model architecture.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="relative border-l-2 border-muted ml-4 space-y-8 py-2">
-                            <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
-                                <h4 className="font-semibold text-sm">Step 1: Ingestion & Transformation</h4>
-                                <p className="text-xs font-mono text-muted-foreground mb-1">0_bird_audio_preprocess_highres.py</p>
-                                <p className="text-sm text-muted-foreground">
-                                    Raw audio files are ingested, segmented into 3-second clips, and converted into high-resolution 384x384 RGB spectrograms using PCEN for noise suppression.
-                                </p>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <h3 className="font-semibold text-lg border-b pb-2">Audio Preprocessing</h3>
+                                <ul className="space-y-2 text-sm text-muted-foreground">
+                                    <li><span className="font-medium text-foreground">Sample Rate:</span> 32,000 Hz</li>
+                                    <li><span className="font-medium text-foreground">Spectrogram:</span> Mel-scale, 384 bands (High Res)</li>
+                                    <li><span className="font-medium text-foreground">Input Shape:</span> 384 x 384 x 3 (1:1 Aspect Ratio)</li>
+                                    <li><span className="font-medium text-foreground">Hop Length:</span> 250 samples</li>
+                                    <li><span className="font-medium text-foreground">Normalization:</span> PCEN (Per-Channel Energy Normalization)</li>
+                                    <li><span className="font-medium text-foreground">Features:</span> Stacked PCEN + Delta + Delta-Delta</li>
+                                </ul>
                             </div>
-                            <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
-                                <h4 className="font-semibold text-sm">Step 2: Quality Control</h4>
-                                <p className="text-xs font-mono text-muted-foreground mb-1">1_spectogramClustering.py</p>
-                                <p className="text-sm text-muted-foreground">
-                                    To handle 288k+ images, we used a ResNet18 model to extract features and K-Means clustering to group similar images, allowing us to bulk-delete clusters of "junk" (silence, static, human speech).
-                                </p>
-                            </div>
-                            <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
-                                <h4 className="font-semibold text-sm">Step 3: Class Balancing</h4>
-                                <p className="text-xs font-mono text-muted-foreground mb-1">2_datasetBalancer.py</p>
-                                <p className="text-sm text-muted-foreground">
-                                    The cleaned dataset was filtered to the top 13 species. Majority classes were downsampled and minority classes upsampled to achieve a perfect balance of 20,000 samples per class.
-                                </p>
-                            </div>
-                            <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
-                                <h4 className="font-semibold text-sm">Step 4: Optimization</h4>
-                                <p className="text-xs font-mono text-muted-foreground mb-1">3_pngCompressor.py</p>
-                                <p className="text-sm text-muted-foreground">
-                                    Lossless PNGs were converted to high-quality JPGs to reduce dataset size from over 100GB to 15.4GB, optimizing I/O throughput during training.
-                                </p>
-                            </div>
-                            <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-primary" />
-                                <h4 className="font-semibold text-sm">Step 5: Model Training</h4>
-                                <p className="text-xs font-mono text-muted-foreground mb-1">4_pytorch_training_highres.py</p>
-                                <p className="text-sm text-muted-foreground">
-                                    The optimized dataset was fed into an EfficientNet-B4 model. Training utilized a custom loop with Mixup and SpecAugment regularization to prevent overfitting.
-                                </p>
+
+                            <div className="space-y-4">
+                                <h3 className="font-semibold text-lg border-b pb-2">Model Architecture</h3>
+                                <ul className="space-y-2 text-sm text-muted-foreground">
+                                    <li><span className="font-medium text-foreground">Backbone:</span> EfficientNet-B4 (Pretrained)</li>
+                                    <li><span className="font-medium text-foreground">Optimizer:</span> AdamW (LR: 0.0005)</li>
+                                    <li><span className="font-medium text-foreground">Loss Function:</span> CrossEntropy with Label Smoothing (0.1)</li>
+                                    <li><span className="font-medium text-foreground">Augmentation:</span> Mixup (α=0.4), Gaussian Noise, SpecAugment</li>
+                                    <li><span className="font-medium text-foreground">Training:</span> 50 Epochs, Batch Size 48, GPU Accelerated</li>
+                                </ul>
                             </div>
                         </div>
                     </CardContent>
@@ -319,7 +361,7 @@ export function ProjectInfo() {
                                 </p>
                                 <p className="text-muted-foreground">
                                     The matrix is extremely clean, though there is slight confusion (16 misclassifications) between the
-                                    <strong> Black-capped Chickadee</strong> and <strong>Tufted Titmouse</strong>, likely due to their similar calls and shared habitats.
+                                    Black-capped Chickadee and White-breasted Nuthatch, likely due to their similar calls and shared habitats.
                                 </p>
                             </div>
                             <div className="md:col-span-2 order-1 md:order-2 flex justify-center">
@@ -371,40 +413,7 @@ export function ProjectInfo() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Technical Implementation</CardTitle>
-                    <CardDescription>
-                        Details on the audio processing pipeline and machine learning model architecture.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-lg border-b pb-2">Audio Preprocessing</h3>
-                            <ul className="space-y-2 text-sm text-muted-foreground">
-                                <li><span className="font-medium text-foreground">Sample Rate:</span> 32,000 Hz</li>
-                                <li><span className="font-medium text-foreground">Spectrogram:</span> Mel-scale, 384 bands (High Res)</li>
-                                <li><span className="font-medium text-foreground">Input Shape:</span> 384 x 384 x 3 (1:1 Aspect Ratio)</li>
-                                <li><span className="font-medium text-foreground">Hop Length:</span> 250 samples</li>
-                                <li><span className="font-medium text-foreground">Normalization:</span> PCEN (Per-Channel Energy Normalization)</li>
-                                <li><span className="font-medium text-foreground">Features:</span> Stacked PCEN + Delta + Delta-Delta</li>
-                            </ul>
-                        </div>
 
-                        <div className="space-y-4">
-                            <h3 className="font-semibold text-lg border-b pb-2">Model Architecture</h3>
-                            <ul className="space-y-2 text-sm text-muted-foreground">
-                                <li><span className="font-medium text-foreground">Backbone:</span> EfficientNet-B4 (Pretrained)</li>
-                                <li><span className="font-medium text-foreground">Optimizer:</span> AdamW (LR: 0.0005)</li>
-                                <li><span className="font-medium text-foreground">Loss Function:</span> CrossEntropy with Label Smoothing (0.1)</li>
-                                <li><span className="font-medium text-foreground">Augmentation:</span> Mixup (α=0.4), Gaussian Noise, SpecAugment</li>
-                                <li><span className="font-medium text-foreground">Training:</span> 50 Epochs, Batch Size 8, GPU Accelerated</li>
-                            </ul>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
 
             <Card>
                 <CardHeader>
