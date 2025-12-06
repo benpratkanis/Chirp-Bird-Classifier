@@ -4,7 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { CheckCircle2, BarChart3, Bird, TrendingDown } from 'lucide-react';
 
-export function ClassificationResult({ species, confidence, allPredictions = [], spectrogram, speciesImage }) {
+export function ClassificationResult({ species, confidence, allPredictions = [], spectrogram, spectrograms, speciesImage }) {
+    // Use the first spectrogram for the main card display if available
+    const displaySpectrogram = spectrogram || (spectrograms && spectrograms.length > 0 ? spectrograms[0] : null);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -20,9 +23,9 @@ export function ClassificationResult({ species, confidence, allPredictions = [],
                                 alt={species}
                                 className="w-full h-full object-cover"
                             />
-                        ) : spectrogram ? (
+                        ) : displaySpectrogram ? (
                             <img
-                                src={spectrogram}
+                                src={displaySpectrogram}
                                 alt="Spectrogram"
                                 className="w-full h-full object-cover opacity-80 mix-blend-multiply"
                             />

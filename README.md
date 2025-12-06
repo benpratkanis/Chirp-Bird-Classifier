@@ -47,13 +47,39 @@ We don't just use grayscale spectrograms. We treat audio like color images to pr
 *   **Band-Limited Scanning:** The preprocessor ignores low-frequency rumble and high-frequency hiss, triggering only on energy in the **$1\text{kHz} - 12\text{kHz}$** "Bird Vocalization Band."
 *   **Failsafe Extraction:** Includes logic to rescue faint calls from quiet recordings by analyzing the noise floor relative to local peaks.
 
-### 3. Model Architecture
+### 3. Data Curation & Balancing
+
+To handle the massive 422GB raw dataset, we implemented an AI-assisted cleaning pipeline:
+*   **Unsupervised Cleaning:** Used ResNet18 feature extraction + K-Means clustering to group and remove "junk" audio (static, silence, human speech).
+*   **Class Balancing:** We narrowed the scope to 13 core species and enforced a strict balance of **20,000 samples per class**.
+    *   *Upsampling:* Random duplication for minority classes.
+    *   *Downsampling:* Random deletion for majority classes.
+*   **Compression:** Spectrograms were converted to optimized JPGs, reducing the dataset to 15.4GB for efficient training.
+
+### 4. Model Architecture & Training
 
 *   **Backbone:** **EfficientNet-B4** (Pretrained on ImageNet). Selected for its ability to handle higher resolution textures ($384 \times 384$).
+*   **Optimizer:** AdamW ($lr=0.0005$) with `ReduceLROnPlateau` scheduler.
 *   **Regularization Strategy:**
     *   **MixUp:** Blends images and labels (e.g., $40\%$ Robin + $60\%$ Sparrow) to force the model to learn features rather than memorizing training data.
     *   **SpecAugment:** Randomly masks vertical (time) and horizontal (frequency) strips during training to improve robustness against signal loss.
     *   **Label Smoothing:** Prevents the model from becoming over-confident in its predictions.
+
+---
+
+## Performance
+
+The model achieved an **Overall Accuracy of 98.32%** on the hold-out test set.
+
+| Metric | Value | Notes |
+| :--- | :--- | :--- |
+| **Accuracy** | **98.32%** | Across 13 classes |
+| **Precision** | **>97%** | For all classes (Highest: Red-bellied Woodpecker @ 99.3%) |
+| **F1-Score** | **0.9832** | Indicates excellent balance between precision and recall |
+
+### Confusion Matrix
+![Confusion Matrix](frontend/src/assets/ConfusionMatrix.png)
+*The matrix shows a strong diagonal, indicating correct predictions. Minor confusion exists between the Black-capped Chickadee and Tufted Titmouse due to similar calls.*
 
 ---
 
@@ -73,17 +99,46 @@ The application includes a rich web interface built with **React**, **Tailwind C
 
 ---
 
+## Future Roadmap
+
+1.  **Geospatial Integration:** Incorporate GPS and timestamp data to filter out non-native birds based on location and season.
+2.  **Sliding Window Inference:** Implement real-time scanning of long recordings to automatically detect and classify multiple bird calls without manual trimming.
+3.  **Multi-Label Classification:** Transition to a multi-label output to identify multiple species singing simultaneously in the same clip.
+
+---
+
 ## Visual Pipeline
 
 ```mermaid
-graph LR
-    A[Raw Audio .WAV] --> B(Band-Pass Filter)
-    B --> C{Bird Activity Detected?}
-    C -- Yes --> D[Generate 384x384 Spectrogram]
-    C -- No --> E[Skip / Log]
-    D --> F[PCEN + Deltas Encoding]
-    F --> G[EfficientNet-B4]
-    G --> H[Species Prediction]
+graph TD
+    subgraph Ingestion ["1. Ingestion & Preprocessing"]
+        A[Raw Audio] -->|ffmpeg| B(Resample 32kHz)
+        B --> C{Quality Check}
+        C -- Pass --> D[PCEN + Deltas]
+        C -- Fail --> X[Discard]
+        D --> E[Segment 384x384]
+    end
+
+    subgraph Cleaning ["2. AI-Assisted Cleaning"]
+        E --> F[ResNet18 Features]
+        F --> G[K-Means Clustering]
+        G --> H{Manual Review}
+        H -- Keep --> I[Clean Dataset]
+        H -- Delete --> X
+    end
+
+    subgraph Balancing ["3. Dataset Balancing"]
+        I --> J{Class Count?}
+        J -- &lt; 20k --> K[Upsample]
+        J -- &gt; 20k --> L[Downsample]
+        K --> M[Balanced Set]
+        L --> M
+    end
+
+    subgraph Training ["4. Model Training"]
+        M --> N[EfficientNet-B4]
+        N --> O[Final Model]
+    end
 ```
 
 ---
@@ -111,7 +166,7 @@ Use this mode for active coding. It enables Hot Module Replacement (HMR) for the
 **Start the stack:**
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 **Access the application:**
@@ -121,7 +176,7 @@ docker-compose up --build
 
 **Hybrid Mode (Faster Frontend Dev):**
 If you want faster frontend iteration without rebuilding containers:
-1.  Run `docker-compose up backend` (starts only the API).
+1.  Run `docker compose up backend` (starts only the API).
 2.  In a new terminal, `cd frontend` and run `npm install` then `npm run dev`.
 3.  The frontend will run locally at `http://localhost:5173` and proxy API requests to the Docker backend.
 
