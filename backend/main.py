@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -36,26 +36,30 @@ def read_root():
 @app.post("/predict")
 async def predict_endpoint(
     file: UploadFile = File(...),
-    start: float = 0.0,
-    duration: float = None
+    start: float = Form(0.0),
+    duration: float = Form(None)
 ):
     if not (file.content_type.startswith("audio/") or file.content_type.startswith("video/")):
         pass 
     
     try:
+        print(f"API DEBUG: Received predict request with start={start}, duration={duration}")
         contents = await file.read()
-        results, image = classifier.predict(contents, filename=file.filename, offset=start, duration=duration)
+        results, images = classifier.predict(contents, filename=file.filename, offset=start, duration=duration)
         
         if results is None:
             raise HTTPException(status_code=500, detail="Inference failed")
             
-        buffered = io.BytesIO()
-        image.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        spectrograms = []
+        for img in images:
+            buffered = io.BytesIO()
+            img.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            spectrograms.append(f"data:image/png;base64,{img_str}")
         
         return JSONResponse(content={
             "predictions": results,
-            "spectrogram": f"data:image/png;base64,{img_str}"
+            "spectrograms": spectrograms
         })
         
     except Exception as e:

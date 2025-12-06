@@ -47,13 +47,39 @@ We don't just use grayscale spectrograms. We treat audio like color images to pr
 *   **Band-Limited Scanning:** The preprocessor ignores low-frequency rumble and high-frequency hiss, triggering only on energy in the **$1\text{kHz} - 12\text{kHz}$** "Bird Vocalization Band."
 *   **Failsafe Extraction:** Includes logic to rescue faint calls from quiet recordings by analyzing the noise floor relative to local peaks.
 
-### 3. Model Architecture
+### 3. Data Curation & Balancing
+
+To handle the massive 422GB raw dataset, we implemented an AI-assisted cleaning pipeline:
+*   **Unsupervised Cleaning:** Used ResNet18 feature extraction + K-Means clustering to group and remove "junk" audio (static, silence, human speech).
+*   **Class Balancing:** We narrowed the scope to 13 core species and enforced a strict balance of **20,000 samples per class**.
+    *   *Upsampling:* Random duplication for minority classes.
+    *   *Downsampling:* Random deletion for majority classes.
+*   **Compression:** Spectrograms were converted to optimized JPGs, reducing the dataset to 15.4GB for efficient training.
+
+### 4. Model Architecture & Training
 
 *   **Backbone:** **EfficientNet-B4** (Pretrained on ImageNet). Selected for its ability to handle higher resolution textures ($384 \times 384$).
+*   **Optimizer:** AdamW ($lr=0.0005$) with `ReduceLROnPlateau` scheduler.
 *   **Regularization Strategy:**
     *   **MixUp:** Blends images and labels (e.g., $40\%$ Robin + $60\%$ Sparrow) to force the model to learn features rather than memorizing training data.
     *   **SpecAugment:** Randomly masks vertical (time) and horizontal (frequency) strips during training to improve robustness against signal loss.
     *   **Label Smoothing:** Prevents the model from becoming over-confident in its predictions.
+
+---
+
+## Performance
+
+The model achieved an **Overall Accuracy of 98.32%** on the hold-out test set.
+
+| Metric | Value | Notes |
+| :--- | :--- | :--- |
+| **Accuracy** | **98.32%** | Across 13 classes |
+| **Precision** | **>97%** | For all classes (Highest: Red-bellied Woodpecker @ 99.3%) |
+| **F1-Score** | **0.9832** | Indicates excellent balance between precision and recall |
+
+### Confusion Matrix
+![Confusion Matrix](frontend/src/assets/ConfusionMatrix.png)
+*The matrix shows a strong diagonal, indicating correct predictions. Minor confusion exists between the Black-capped Chickadee and Tufted Titmouse due to similar calls.*
 
 ---
 
@@ -70,6 +96,14 @@ The application includes a rich web interface built with **React**, **Tailwind C
 | **Classification Card** | Shows the predicted species, confidence score, and top alternative matches. |
 | **Species Info Window** | Displays detailed facts about the bird, including native range, habitat, diet, and vocalization descriptions. |
 | **Spectrogram View** | A dedicated full-width view of the generated spectrogram used by the AI, allowing you to "see" the sound. |
+
+---
+
+## Future Roadmap
+
+1.  **Geospatial Integration:** Incorporate GPS and timestamp data to filter out non-native birds based on location and season.
+2.  **Sliding Window Inference:** Implement real-time scanning of long recordings to automatically detect and classify multiple bird calls without manual trimming.
+3.  **Multi-Label Classification:** Transition to a multi-label output to identify multiple species singing simultaneously in the same clip.
 
 ---
 

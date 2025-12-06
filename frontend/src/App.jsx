@@ -9,6 +9,8 @@ import { ClassificationResult } from './components/ClassificationResult';
 import { SpeciesCarousel } from './components/SpeciesCarousel';
 import { SpeciesInfoWindow } from './components/SpeciesInfoWindow';
 import { SpectrogramView } from './components/SpectrogramView';
+import { SupportedSpeciesList } from './components/SupportedSpeciesList';
+import { ProjectInfo } from './components/ProjectInfo';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Toaster } from '@/components/ui/toaster';
@@ -23,6 +25,8 @@ function App() {
   const [result, setResult] = useState(null);
   const [allPredictions, setAllPredictions] = useState([]);
   const [spectrogram, setSpectrogram] = useState(null);
+  const [spectrograms, setSpectrograms] = useState([]);
+  const [currentView, setCurrentView] = useState('home');
   const { toast } = useToast();
 
   const handleFileSelect = (selectedFile) => {
@@ -30,6 +34,7 @@ function App() {
     setResult(null);
     setAllPredictions([]);
     setSpectrogram(null);
+    setSpectrograms([]);
     setTrimRegion(null);
   };
 
@@ -38,6 +43,7 @@ function App() {
     setResult(null);
     setAllPredictions([]);
     setSpectrogram(null);
+    setSpectrograms([]);
     setTrimRegion(null);
   };
 
@@ -51,6 +57,12 @@ function App() {
       formData.append('file', file);
       formData.append('start', trimRegion.start);
       formData.append('duration', trimRegion.end - trimRegion.start);
+
+      console.log('Submitting prediction request:', {
+        file: file.name,
+        start: trimRegion.start,
+        duration: trimRegion.end - trimRegion.start
+      });
 
       const apiUrl = '/api';
       const response = await axios.post(`${apiUrl}/predict`, formData, {
@@ -68,7 +80,16 @@ function App() {
           confidence: topPrediction.probability
         });
         setAllPredictions(data.predictions);
-        setSpectrogram(data.spectrogram);
+
+        // Handle new API response format with multiple spectrograms
+        if (data.spectrograms && data.spectrograms.length > 0) {
+          setSpectrograms(data.spectrograms);
+          setSpectrogram(data.spectrograms[0]); // Fallback/Primary
+        } else if (data.spectrogram) {
+          // Backward compatibility
+          setSpectrogram(data.spectrogram);
+          setSpectrograms([data.spectrogram]);
+        }
 
         toast({
           title: "Analysis Complete",
@@ -101,156 +122,186 @@ function App() {
         }}
       />
 
-      <div className={`relative z-10 mx-auto px-4 py-12 md:py-20 transition-all duration-500 ${result ? 'max-w-7xl' : 'max-w-5xl'}`}>
+      <div className={`relative z-10 mx-auto px-4 py-12 md:py-20 transition-all duration-500 ${result ? 'max-w-7xl' : 'max-w-7xl'}`}>
         <Toaster />
 
-        <div className="text-center mb-16 space-y-4">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4"
+        <nav className="flex justify-center space-x-4 mb-8">
+          <Button
+            variant={currentView === 'home' ? 'default' : 'ghost'}
+            onClick={() => setCurrentView('home')}
           >
-            <Bird className="w-8 h-8 text-primary" />
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-6xl font-serif font-bold text-foreground tracking-tight"
+            Home
+          </Button>
+          <Button
+            variant={currentView === 'info' ? 'default' : 'ghost'}
+            onClick={() => setCurrentView('info')}
           >
-            Chirp
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-muted-foreground max-w-xl mx-auto font-light"
-          >
-            Upload or record audio to identify bird species using advanced machine learning analysis.
-          </motion.p>
-        </div>
+            Project Report
+          </Button>
+        </nav>
 
-        <div className="space-y-8">
-          <AnimatePresence mode="wait">
-            {!file ? (
+        {currentView === 'home' ? (
+          <>
+            <div className="text-center mb-16 space-y-4">
               <motion.div
-                key="input-methods"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Tabs defaultValue="upload" className="w-full max-w-2xl mx-auto">
-                  <TabsList className="grid w-full grid-cols-2 mb-8">
-                    <TabsTrigger value="upload" className="flex items-center gap-2">
-                      <Upload className="w-4 h-4" />
-                      Upload File
-                    </TabsTrigger>
-                    <TabsTrigger value="record" className="flex items-center gap-2">
-                      <Mic className="w-4 h-4" />
-                      Record Audio
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="upload" className="mt-0">
-                    <AudioUploader onFileSelect={handleFileSelect} />
-                  </TabsContent>
-
-                  <TabsContent value="record" className="mt-0">
-                    <AudioRecorder onRecordingComplete={handleFileSelect} />
-                  </TabsContent>
-                </Tabs>
-              </motion.div>
-            ) : !result ? (
-              <motion.div
-                key="edit"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-8 max-w-4xl mx-auto"
+                className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4"
               >
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    onClick={handleReset}
-                    className="text-muted-foreground hover:text-foreground"
-                    disabled={isProcessing}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Selection
-                  </Button>
-                  <div className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full truncate max-w-[200px] md:max-w-xs">
-                    {file.name}
-                  </div>
-                </div>
-
-                <AudioEditor
-                  file={file}
-                  onTrimChange={(start, end) => setTrimRegion({ start, end })}
-                />
-
-                <div className="flex justify-center pt-4">
-                  <Button
-                    size="lg"
-                    onClick={handleSubmit}
-                    disabled={isProcessing}
-                    className="w-full md:w-auto min-w-[200px] text-lg h-12 shadow-lg shadow-primary/20"
-                    data-testid="button-identify"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Analyzing Audio...
-                      </>
-                    ) : (
-                      <>
-                        Identify Species
-                        <Bird className="w-5 h-5 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <Bird className="w-8 h-8 text-primary" />
               </motion.div>
-            ) : (
-              <motion.div
-                key="result"
+              <motion.h1
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-4xl md:text-6xl font-serif font-bold text-foreground tracking-tight"
+              >
+                Chirp
+              </motion.h1>
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="space-y-8"
+                transition={{ delay: 0.2 }}
+                className="text-lg text-muted-foreground max-w-xl mx-auto font-light"
               >
-                <div className="flex justify-start">
-                  <Button
-                    variant="outline"
-                    onClick={handleReset}
-                    data-testid="button-analyze-another"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Analyze Another
-                  </Button>
+                Upload or record audio to identify bird species using advanced machine learning analysis.
+              </motion.p>
+            </div>
+
+            <div className="grid lg:grid-cols-4 gap-8">
+              <div className={`${!result ? 'lg:col-span-3' : 'lg:col-span-4'} space-y-8`}>
+                <AnimatePresence mode="wait">
+                  {!file ? (
+                    <motion.div
+                      key="input-methods"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Tabs defaultValue="upload" className="w-full max-w-2xl mx-auto">
+                        <TabsList className="grid w-full grid-cols-2 mb-8">
+                          <TabsTrigger value="upload" className="flex items-center gap-2">
+                            <Upload className="w-4 h-4" />
+                            Upload File
+                          </TabsTrigger>
+                          <TabsTrigger value="record" className="flex items-center gap-2">
+                            <Mic className="w-4 h-4" />
+                            Record Audio
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="upload" className="mt-0">
+                          <AudioUploader onFileSelect={handleFileSelect} />
+                        </TabsContent>
+
+                        <TabsContent value="record" className="mt-0">
+                          <AudioRecorder onRecordingComplete={handleFileSelect} />
+                        </TabsContent>
+                      </Tabs>
+                    </motion.div>
+                  ) : !result ? (
+                    <motion.div
+                      key="edit"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="space-y-8 max-w-4xl mx-auto"
+                    >
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="ghost"
+                          onClick={handleReset}
+                          className="text-muted-foreground hover:text-foreground"
+                          disabled={isProcessing}
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-2" />
+                          Back to Selection
+                        </Button>
+                        <div className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full truncate max-w-[200px] md:max-w-xs">
+                          {file.name}
+                        </div>
+                      </div>
+
+                      <AudioEditor
+                        file={file}
+                        onTrimChange={(start, end) => setTrimRegion({ start, end })}
+                      />
+
+                      <div className="flex justify-center pt-4">
+                        <Button
+                          size="lg"
+                          onClick={handleSubmit}
+                          disabled={isProcessing}
+                          className="w-full md:w-auto min-w-[200px] text-lg h-12 shadow-lg shadow-primary/20"
+                          data-testid="button-identify"
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                              Analyzing Audio...
+                            </>
+                          ) : (
+                            <>
+                              Identify Species
+                              <Bird className="w-5 h-5 ml-2" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="result"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="space-y-8"
+                    >
+                      <div className="flex justify-start">
+                        <Button
+                          variant="outline"
+                          onClick={handleReset}
+                          data-testid="button-analyze-another"
+                        >
+                          <ArrowLeft className="w-4 h-4 mr-2" />
+                          Analyze Another
+                        </Button>
+                      </div>
+
+                      <div className="grid xl:grid-cols-3 gap-8 items-start">
+                        <div className="xl:col-span-2">
+                          <ClassificationResult
+                            species={result.species}
+                            confidence={result.confidence}
+                            allPredictions={allPredictions}
+                            spectrogram={spectrogram}
+                            spectrograms={spectrograms}
+                            speciesImage={speciesImages[result.species]}
+                          />
+                        </div>
+                        <SpeciesInfoWindow species={result.species} />
+
+                        <div className="xl:col-span-3">
+                          <SpectrogramView spectrogram={spectrogram} spectrograms={spectrograms} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {!file && <SpeciesCarousel />}
+              </div>
+
+              {!result && (
+                <div className="hidden lg:block lg:col-span-1 h-[calc(100vh-12rem)] sticky top-8">
+                  <SupportedSpeciesList />
                 </div>
-
-                <div className="grid xl:grid-cols-3 gap-8 items-start">
-                  <div className="xl:col-span-2">
-                    <ClassificationResult
-                      species={result.species}
-                      confidence={result.confidence}
-                      allPredictions={allPredictions}
-                      spectrogram={spectrogram}
-                      speciesImage={speciesImages[result.species]}
-                    />
-                  </div>
-                  <SpeciesInfoWindow species={result.species} />
-
-                  <div className="xl:col-span-3">
-                    <SpectrogramView spectrogram={spectrogram} />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!file && <SpeciesCarousel />}
-        </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <ProjectInfo />
+        )}
       </div>
     </div>
   );

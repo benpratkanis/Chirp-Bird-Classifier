@@ -1,0 +1,14 @@
+Index (Class ID),Species Name
+0,American_Crow
+1,American_Robin
+2,Black-capped_Chickadee
+3,Blue_Jay
+4,Dark-eyed_Junco
+5,House_Finch
+6,Northern_Cardinal
+7,Northern_Flicker
+8,Red-bellied_Woodpecker
+9,Red-winged_Blackbird
+10,Song_Sparrow
+11,Tufted_Titmouse
+12,White-breasted_Nuthatch

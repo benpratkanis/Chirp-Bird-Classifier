@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
-import { Play, Pause, Scissors, ZoomIn, ZoomOut, RefreshCw, AlertCircle } from 'lucide-react';
+import { Play, Pause, Scissors, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+
 import { Card } from '@/components/ui/card';
 
 export function AudioEditor({ file, onTrimChange }) {
@@ -13,9 +13,10 @@ export function AudioEditor({ file, onTrimChange }) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
-    const [zoom, setZoom] = useState(10);
+
     const [isReady, setIsReady] = useState(false);
     const [error, setError] = useState(null);
+    const [selectedDuration, setSelectedDuration] = useState(0);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -37,7 +38,7 @@ export function AudioEditor({ file, onTrimChange }) {
             barRadius: 2,
             height: 128,
             normalize: true,
-            minPxPerSec: zoom,
+            minPxPerSec: 0,
         });
 
         // Initialize Regions Plugin
@@ -75,16 +76,19 @@ export function AudioEditor({ file, onTrimChange }) {
 
             // Create default region (middle 80%)
             wsRegions.clearRegions();
+            const start = dur * 0.1;
+            const end = dur * 0.9;
             wsRegions.addRegion({
-                start: dur * 0.1,
-                end: dur * 0.9,
+                start: start,
+                end: end,
                 color: 'rgba(46, 125, 85, 0.2)', // Green overlay for selected region
                 drag: true,
                 resize: true,
                 id: 'trim-region'
             });
 
-            onTrimChange(dur * 0.1, dur * 0.9);
+            onTrimChange(start, end);
+            setSelectedDuration(end - start);
         });
 
         ws.on('error', (err) => {
@@ -99,6 +103,7 @@ export function AudioEditor({ file, onTrimChange }) {
                 setDuration(dur);
                 onTrimChange(0, dur); // Default to full duration if we can't show regions
                 setIsReady(true); // Pretend we are ready so user can submit
+                setSelectedDuration(dur);
             }
         });
 
@@ -106,8 +111,9 @@ export function AudioEditor({ file, onTrimChange }) {
         ws.on('pause', () => setIsPlaying(false));
         ws.on('timeupdate', (time) => setCurrentTime(time));
 
-        wsRegions.on('region-updated', (region) => {
+        wsRegions.on('region-update', (region) => {
             onTrimChange(region.start, region.end);
+            setSelectedDuration(region.end - region.start);
         });
 
         return () => {
@@ -120,15 +126,7 @@ export function AudioEditor({ file, onTrimChange }) {
         };
     }, [file]);
 
-    useEffect(() => {
-        if (wavesurferRef.current && isReady && !error) {
-            try {
-                wavesurferRef.current.zoom(zoom);
-            } catch (e) {
-                console.warn("Error setting zoom:", e);
-            }
-        }
-    }, [zoom, isReady, error]);
+
 
     const togglePlay = () => {
         wavesurferRef.current?.playPause();
@@ -146,8 +144,10 @@ export function AudioEditor({ file, onTrimChange }) {
                 id: 'trim-region'
             });
             onTrimChange(0, duration);
+            setSelectedDuration(duration);
         } else if (error && duration > 0) {
             onTrimChange(0, duration);
+            setSelectedDuration(duration);
         }
     };
 
@@ -158,8 +158,15 @@ export function AudioEditor({ file, onTrimChange }) {
                     <Scissors className="w-4 h-4 text-accent" />
                     Trim Audio
                 </h3>
-                <div className="text-xs font-mono text-muted-foreground">
-                    {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
+                <div className="flex items-center gap-4 text-xs font-mono">
+                    <div className={`${selectedDuration < 3.0 ? 'text-red-500 font-bold' : 'text-muted-foreground'}`}>
+                        Selected: {selectedDuration.toFixed(2)}s
+                        {selectedDuration < 3.0 && " (Too Short)"}
+                    </div>
+                    <div className="text-muted-foreground/50">|</div>
+                    <div className="text-muted-foreground">
+                        Total: {duration.toFixed(2)}s
+                    </div>
                 </div>
             </div>
 
@@ -189,20 +196,7 @@ export function AudioEditor({ file, onTrimChange }) {
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                 </Button>
 
-                <div className="flex items-center gap-2 flex-1 min-w-[120px]">
-                    <ZoomOut className="w-4 h-4 text-muted-foreground" />
-                    <Slider
-                        value={[zoom]}
-                        min={10}
-                        max={200}
-                        step={10}
-                        onValueChange={(val) => setZoom(val[0])}
-                        disabled={!!error}
-                        className="w-full"
-                        data-testid="slider-zoom"
-                    />
-                    <ZoomIn className="w-4 h-4 text-muted-foreground" />
-                </div>
+
 
                 <Button
                     variant="ghost"

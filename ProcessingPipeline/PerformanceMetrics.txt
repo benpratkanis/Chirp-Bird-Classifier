@@ -1,0 +1,88 @@
+Bird Species
+Precision
+Recall
+F1-Score
+Support
+American Crow
+0.9794
+0.9755
+0.9775
+2000
+American Robin
+0.9859
+0.9790
+0.9824
+2000
+Black-capped Chickadee
+0.9734
+0.9700
+0.9717
+2000
+Blue Jay
+0.9823
+0.9705
+0.9764
+2000
+Dark-eyed Junco
+0.9822
+0.9945
+0.9883
+2000
+House Finch
+0.9925
+0.9910
+0.9917
+2000
+Northern Cardinal
+0.9810
+0.9800
+0.9805
+2000
+Northern Flicker
+0.9865
+0.9845
+0.9855
+2000
+Red-bellied Woodpecker
+0.9930
+0.9905
+0.9917
+2000
+Red-winged Blackbird
+0.9801
+0.9845
+0.9823
+2000
+Song Sparrow
+0.9763
+0.9895
+0.9829
+2000
+Tufted Titmouse
+0.9860
+0.9840
+0.9850
+2000
+White-breasted Nuthatch
+0.9831
+0.9880
+0.9855
+2000
+Accuracy
+
+
+
+
+0.9832
+26000
+Macro Avg
+0.9832
+0.9832
+0.9832
+26000
+Weighted Avg
+0.9832
+0.9832
+0.9832
+26000
+

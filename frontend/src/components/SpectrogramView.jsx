@@ -3,8 +3,10 @@ import { Card } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Activity, Waves } from 'lucide-react';
 
-export function SpectrogramView({ spectrogram }) {
-    if (!spectrogram) return null;
+export function SpectrogramView({ spectrogram, spectrograms }) {
+    const images = spectrograms || (spectrogram ? [spectrogram] : []);
+
+    if (images.length === 0) return null;
 
     return (
         <motion.div
@@ -16,19 +18,25 @@ export function SpectrogramView({ spectrogram }) {
             <Card className="h-full overflow-hidden border-none shadow-xl bg-card/90 backdrop-blur-xl p-6">
                 <div className="flex items-center gap-2 text-primary mb-4">
                     <Activity className="w-5 h-5" />
-                    <span className="text-sm font-medium uppercase tracking-wider">Audio Spectrogram</span>
+                    <span className="text-sm font-medium uppercase tracking-wider">
+                        Audio Spectrograms ({images.length})
+                    </span>
                 </div>
 
-                <div className="relative rounded-lg overflow-hidden bg-black/5 border border-border/50 aspect-[3/1] w-full group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <img
-                        src={spectrogram}
-                        alt="Audio Spectrogram"
-                        className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal dark:opacity-90"
-                    />
-                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-background/80 backdrop-blur text-xs font-mono text-muted-foreground rounded">
-                        Frequency Analysis
-                    </div>
+                <div className="grid grid-cols-1 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {images.map((img, idx) => (
+                        <div key={idx} className="relative rounded-lg overflow-hidden bg-black/5 border border-border/50 aspect-square w-full group shrink-0">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <img
+                                src={img}
+                                alt={`Spectrogram segment ${idx + 1}`}
+                                className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal dark:opacity-90"
+                            />
+                            <div className="absolute bottom-2 right-2 px-2 py-1 bg-background/80 backdrop-blur text-xs font-mono text-muted-foreground rounded">
+                                Segment {idx + 1}
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
                 <div className="mt-4 flex items-start gap-3 text-sm text-muted-foreground">
