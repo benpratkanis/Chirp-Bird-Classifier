@@ -194,7 +194,7 @@ Use this mode to simulate the final deployment environment. This uses `docker-co
     *   `/api/*` -> `localhost:8000`
     *   `/*` -> `localhost:3000`
 
-**Deploying on Low-Memory Servers (e.g., AWS t2.micro):**
+**Deploying on Low-Memory Servers (e.g., AWS t3.micro):**
 To prevent freezing during build, use the provided deployment script:
 
 ```bash
