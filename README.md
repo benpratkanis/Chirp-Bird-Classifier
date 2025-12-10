@@ -12,6 +12,10 @@
 
 The project features a modern, responsive **React frontend** that allows users to record or upload audio, visualize spectrograms, and get detailed species information.
 
+### [Chirp-Ai](https://chirp-ai.me/)
+### [Processed Spectrograms](https://drive.google.com/file/d/1lOGMFg3RXoBW69Hwr2UmcMNGkqKxJa4x/view?usp=sharing)
+
+
 ---
 
 ## The Problem
@@ -41,7 +45,7 @@ We don't just use grayscale spectrograms. We treat audio like color images to pr
 | **Green** | **Velocity** | Delta features (first derivative) capturing the rate of change in energy. |
 | **Blue** | **Acceleration** | Delta-Delta features (second derivative) capturing complex modulation. |
 
-### 2. Physics-Based Segmentation
+### 2. Segmentation
 
 *   **Square Inputs:** We process audio in $3.0$-second chunks. At our specific sample rate and hop length, this produces a mathematically perfect $384 \times 384$ square image. This ensures **zero aspect ratio distortion** when feeding the CNN.
 *   **Band-Limited Scanning:** The preprocessor ignores low-frequency rumble and high-frequency hiss, triggering only on energy in the **$1\text{kHz} - 12\text{kHz}$** "Bird Vocalization Band."
@@ -159,7 +163,7 @@ git clone https://github.com/benpratkanis/Chirp-Bird-Classifier.git
 cd chirp
 ```
 
-### 2. Run in Development Mode
+### 2. Run in Development Mode **(Recommended)**
 
 Use this mode for active coding. It enables Hot Module Replacement (HMR) for the React frontend and auto-reloading for the FastAPI backend.
 
